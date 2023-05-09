@@ -108,7 +108,7 @@ public class FusionCsv {
 
                 resultMap.set(result);
                 //resultMap.set(rowArray[indexRejetCO2]);
-                //groupBy.set(rowArray[indexMarque].split(" ")[0]);
+                groupBy.set(rowArray[indexMarque].split(" ")[0]);
                 
                 context.write(groupBy, resultMap);
                 }catch(Exception ex){
