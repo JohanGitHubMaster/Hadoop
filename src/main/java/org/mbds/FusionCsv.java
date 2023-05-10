@@ -106,8 +106,8 @@ public class FusionCsv {
                 if(indexprix!=-1)result+=rowArray[indexprix];
                   else result+="Null";
 
-                resultMap.set(result);
-                //resultMap.set(rowArray[indexRejetCO2]);
+                //resultMap.set(result.toLowerCase());
+                resultMap.set(rowArray[indexBonus]+","+rowArray[indexRejetCO2]+","+rowArray[indexCoutEnerie]);
                 groupBy.set(rowArray[indexMarque].split(" ")[0]);
                 
                 context.write(groupBy, resultMap);
@@ -125,18 +125,28 @@ public class FusionCsv {
         @Override
         protected void reduce(Text group, Iterable<Text> profit, Context context) throws IOException, InterruptedException {
             String totalprofit = "";
-            String result = "";
-            //int result = 0;
+            //String result = "";
+            int bonusMalus = 0;
+            int rejetCO2 = 0;
+            int cout = 0;
             int count = 0;
+            String ex = "";
             for (Text value : profit) {
-                
+                String[] values = (value+"").split(",");
                 try{
-                    result += value+ " \n";
-                    //result += Integer.parseInt(value+"");
+                    
+                    //result += value+ " \n";
+                    ex += "ito ny ex voalohany "+values[0].replaceAll(" ", "space").split("€")[0].trim()+" \n";
+                    bonusMalus += Integer.parseInt(values[0].split("€")[0].replaceAll(" ", "").trim());
+                    rejetCO2 += Integer.parseInt(values[1].replace('€', ' ').replaceAll(" ", "").trim());
+                    cout += Integer.parseInt(values[2].split("€")[0].replaceAll(" ", "").trim());
                 }
                 catch(Exception e){
+                    bonusMalus += 0;
+                    rejetCO2 += 0;
+                    cout += 0;
                     //result += 0;
-                    result+= e.getMessage()+" \n";
+                    //ex+= e.getMessage()+" \n";
                 }
                 totalprofit +="debut "+" "+ value + " fin \n";  
                 //break;
@@ -144,7 +154,9 @@ public class FusionCsv {
             }
            
             //total.set(totalprofit);
-            total.set(result);
+            //total.set(result);
+            
+            total.set(Integer.toString(bonusMalus/count)+","+Integer.toString(rejetCO2/count)+","+Integer.toString(cout/count)+","+ex);        
             //total.set(Integer.toString(result/count));
             context.write(group, total);
         }
@@ -158,7 +170,7 @@ public class FusionCsv {
         // The GenericOptionParser takes care of Hadoop-specific arguments.
         String[] ourArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         // Check input arguments.
-        if (ourArgs.length != 3) {
+        if (ourArgs.length != 2) {
             System.err.println("Usage: sales <in> <out> <analyseType>");
             System.exit(2);
         }
@@ -175,13 +187,13 @@ public class FusionCsv {
         job.setOutputValueClass(Text.class);
         // Indicate from where to read input data from HDFS.
         FileInputFormat.addInputPath(job, new Path(ourArgs[0]));
-        FileInputFormat.addInputPath(job, new Path(ourArgs[1]));
+        //FileInputFormat.addInputPath(job, new Path(ourArgs[1]));
         
         // Indicate from where to read input data from HDFS.
         //FileInputFormat.addInputPath(job, new Path(ourArgs[1]));-
         
         // Indicate where to write the results on HDFS.
-        FileOutputFormat.setOutputPath(job, new Path(ourArgs[2]));
+        FileOutputFormat.setOutputPath(job, new Path(ourArgs[1]));
 
         // We start the MapReduce Job execution (synchronous approach).
         System.exit(job.waitForCompletion(true) ? 0 : 1);
